@@ -133,7 +133,46 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
   doc.text(`Generated on ${new Date().toLocaleString('en-GB')} by Zakat Manager`, W - M, footerY, { align: 'right' });
 
   // ─── SAVE ───────────────────────────────────────────
-  doc.save(`Zakat_Report_${record.yearHijri}_${record.yearGregorian}.pdf`);
+  const fileName = `Zakat_Report_${record.yearHijri}_${record.yearGregorian}.pdf`;
+
+  // Detect if running inside a WebView (Capacitor / Android)
+  const isWebView =
+    typeof navigator !== 'undefined' &&
+    (/wv|WebView/i.test(navigator.userAgent) ||
+     // Capacitor sets this
+     (window as any).Capacitor !== undefined);
+
+  if (isWebView) {
+    // WebView can't handle blob downloads — use data URI approach
+    const pdfBlob = doc.output('blob');
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUri = reader.result as string;
+      // Open the PDF in a new tab — Android will offer to open/download it
+      const newTab = window.open('', '_blank');
+      if (newTab) {
+        newTab.document.write(
+          `<html><head><title>${fileName}</title></head>` +
+          `<body style="margin:0;padding:0;">` +
+          `<embed src="${dataUri}" type="application/pdf" width="100%" height="100%" style="position:absolute;top:0;left:0;right:0;bottom:0;" />` +
+          `<p style="text-align:center;margin-top:20px;font-family:sans-serif;">` +
+          `If the PDF doesn't display, <a href="${dataUri}" download="${fileName}">click here to download</a>.` +
+          `</p></body></html>`
+        );
+        newTab.document.close();
+      } else {
+        // Fallback: direct download link
+        const link = document.createElement('a');
+        link.href = dataUri;
+        link.download = fileName;
+        link.click();
+      }
+    };
+    reader.readAsDataURL(pdfBlob);
+  } else {
+    // Standard browser — normal download works fine
+    doc.save(fileName);
+  }
 }
 
 // ═══ ITEMS-BASED TABLES ═══════════════════════════════
