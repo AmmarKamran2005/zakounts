@@ -26,6 +26,7 @@ const categoryLabels: Record<string, string> = {
   GOLD_SILVER: "Gold & Silver",
   PROPERTY: "Properties",
   CURRENCY: "Foreign Currencies",
+  LOAN_GIVEN: "Loans Given",
   LIABILITY: "Liabilities",
 };
 
@@ -81,11 +82,26 @@ export function CalculationBreakdown({ record }: CalculationBreakdownProps) {
         <Separator />
 
         <div className="flex justify-between text-lg font-bold">
-          <span>Zakat Due (2.5%)</span>
+          <span>Calculated Zakat (2.5%)</span>
           <span className={`font-mono ${record.zakatDue > 0 ? "text-amber-600" : "text-green-600"}`}>
             {formatPKR(record.zakatDue)}
           </span>
         </div>
+
+        {(record.zakatPaid > 0) && (
+          <>
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Zakat Paid Till Date</span>
+              <span className="font-mono text-orange-600">- {formatPKR(record.zakatPaid)}</span>
+            </div>
+            <div className="flex justify-between text-lg font-bold p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+              <span>Final Payable Zakat</span>
+              <span className="font-mono text-emerald-700 dark:text-emerald-400">
+                {formatPKR(Math.max(0, record.zakatDue - record.zakatPaid))}
+              </span>
+            </div>
+          </>
+        )}
 
         <div className="mt-4 p-3 bg-muted/50 rounded-lg">
           <h4 className="text-xs font-semibold text-muted-foreground mb-2">Exchange Rates Used</h4>
@@ -105,7 +121,7 @@ export function CalculationBreakdown({ record }: CalculationBreakdownProps) {
 /** Breakdown using line items */
 function ItemsBreakdown({ items, record }: { items: ZakatItem[]; record: ZakatRecord }) {
   const grouped = groupItems(items);
-  const assetCategories = ['CASH', 'BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CURRENCY'];
+  const assetCategories = ['CASH', 'BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CURRENCY', 'LOAN_GIVEN'];
 
   return (
     <div className="space-y-4">

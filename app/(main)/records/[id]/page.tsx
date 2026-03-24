@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, Calendar, Banknote, Building2, TrendingUp, Gem, Home, Coins, MinusCircle, FileDown, Printer, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Banknote, Building2, TrendingUp, Gem, Home, Coins, MinusCircle, HandCoins, FileDown, Printer, Loader2 } from "lucide-react";
 import { formatPKR } from "@/lib/zakatCalculator";
 import type { ZakatItem } from "@/types";
 
@@ -23,6 +23,7 @@ const categoryConfig: Record<string, { label: string; icon: React.ComponentType<
   GOLD_SILVER: { label: "Gold & Silver", icon: Gem, color: "text-yellow-600" },
   PROPERTY: { label: "Properties", icon: Home, color: "text-orange-600" },
   CURRENCY: { label: "Foreign Currencies", icon: Coins, color: "text-cyan-600" },
+  LOAN_GIVEN: { label: "Loans Given", icon: HandCoins, color: "text-teal-600" },
   LIABILITY: { label: "Liabilities", icon: MinusCircle, color: "text-red-600" },
 };
 
@@ -129,7 +130,7 @@ export default function RecordDetailPage({ params }: { params: Promise<{ id: str
             {hasItems ? (
               /* Items-based detail view */
               <div className="space-y-4">
-                {['CASH', 'BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CURRENCY'].map(cat => {
+                {['CASH', 'BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CURRENCY', 'LOAN_GIVEN'].map(cat => {
                   const items = grouped[cat];
                   if (!items || items.length === 0) return null;
                   const config = categoryConfig[cat];
@@ -241,13 +242,31 @@ export default function RecordDetailPage({ params }: { params: Promise<{ id: str
               </div>
             </div>
 
-            <div className="pt-4 border-t flex justify-between items-center">
-              <span className="font-semibold">Zakat Due</span>
-              <div className="text-right">
-                <p className="text-2xl font-bold">{formatPKR(record.zakatDue)}</p>
-                <Badge variant={record.netAssets >= record.nisabValue ? "default" : "secondary"}>
-                  {record.netAssets >= record.nisabValue ? "Above Nisab" : "Below Nisab"}
-                </Badge>
+            <div className="pt-4 border-t space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="font-semibold">Calculated Zakat (2.5%)</span>
+                <p className="text-xl font-bold">{formatPKR(record.zakatDue)}</p>
+              </div>
+
+              {(record.zakatPaid > 0) && (
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-muted-foreground">Zakat Paid Till Date</span>
+                  <span className="font-semibold text-orange-600">- {formatPKR(record.zakatPaid)}</span>
+                </div>
+              )}
+
+              <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
+                <span className="font-bold">
+                  {record.zakatPaid > 0 ? "Final Payable Zakat" : "Zakat Due"}
+                </span>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-primary">
+                    {formatPKR(Math.max(0, record.zakatDue - (record.zakatPaid || 0)))}
+                  </p>
+                  <Badge variant={record.netAssets >= record.nisabValue ? "default" : "secondary"}>
+                    {record.netAssets >= record.nisabValue ? "Above Nisab" : "Below Nisab"}
+                  </Badge>
+                </div>
               </div>
             </div>
           </CardContent>
