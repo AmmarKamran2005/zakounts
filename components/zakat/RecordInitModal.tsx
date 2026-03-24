@@ -13,9 +13,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, FilePlus, FolderOpen, Calendar, ArrowRight, Check } from "lucide-react";
+import { RefreshCw, FilePlus, FolderOpen, Calendar, ArrowRight, Check, Loader2 } from "lucide-react";
 import { formatPKR } from "@/lib/zakatCalculator";
 import { apiRecordToFormData } from "@/lib/zakatTransform";
+import api from "@/lib/api";
+import { toast } from "sonner";
 import type { ZakatRecord } from "@/types";
 import type { ZakatFormData } from "@/schemas/zakat.schema";
 
@@ -81,24 +83,46 @@ export function RecordInitModal({
 }: RecordInitModalProps) {
   const [choice, setChoice] = useState<InitChoice | null>(null);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
 
   const latestRecord = records.length > 0 ? records[0] : null; // records are sorted desc by createdAt
 
-  const handleConfirm = () => {
+  // Fetch full record with items from the API
+  const fetchFullRecord = async (id: string): Promise<ZakatRecord> => {
+    const { data } = await api.get(`/zakat/${id}`);
+    return data.data;
+  };
+
+  const handleConfirm = async () => {
     if (choice === "fresh") {
       onSelect(null);
-    } else if (choice === "previous" && latestRecord) {
-      onSelect(buildPrefillFromRecord(latestRecord), latestRecord);
-    } else if (choice === "history" && selectedHistoryId) {
-      const rec = records.find(r => r.id === selectedHistoryId);
-      if (rec) {
-        onSelect(buildPrefillFromRecord(rec), rec);
-      }
+      setChoice(null);
+      setSelectedHistoryId(null);
+      onOpenChange(false);
+      return;
     }
-    // Reset state
-    setChoice(null);
-    setSelectedHistoryId(null);
-    onOpenChange(false);
+
+    setConfirming(true);
+    try {
+      let sourceId: string | null = null;
+      if (choice === "previous" && latestRecord) {
+        sourceId = latestRecord.id;
+      } else if (choice === "history" && selectedHistoryId) {
+        sourceId = selectedHistoryId;
+      }
+
+      if (sourceId) {
+        const fullRecord = await fetchFullRecord(sourceId);
+        onSelect(buildPrefillFromRecord(fullRecord), fullRecord);
+      }
+    } catch {
+      toast.error("Failed to load record data");
+    } finally {
+      setConfirming(false);
+      setChoice(null);
+      setSelectedHistoryId(null);
+      onOpenChange(false);
+    }
   };
 
   const handleClose = () => {
@@ -208,10 +232,19 @@ export function RecordInitModal({
           <Button variant="outline" onClick={handleClose}>Cancel</Button>
           <Button
             onClick={handleConfirm}
-            disabled={!choice || (choice === "history" && !selectedHistoryId)}
+            disabled={!choice || (choice === "history" && !selectedHistoryId) || confirming}
           >
-            Continue
-            <ArrowRight className="ml-2 h-4 w-4" />
+            {confirming ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Loading...
+              </>
+            ) : (
+              <>
+                Continue
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </>
+            )}
           </Button>
         </div>
       </DialogContent>

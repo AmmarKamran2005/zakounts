@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useZakat } from "@/hooks/useZakat";
+import api from "@/lib/api";
 import { ZakatFormModal } from "@/components/zakat/ZakatFormModal";
 import { RecordInitModal } from "@/components/zakat/RecordInitModal";
 import { ZakatTable } from "@/components/zakat/ZakatTable";
@@ -43,10 +44,16 @@ export default function RecordsPage() {
     setFormModalOpen(true);
   };
 
-  const handleEdit = (record: ZakatRecord) => {
-    setEditRecord(record);
-    setPrefillData(null);
-    setFormModalOpen(true);
+  const handleEdit = async (record: ZakatRecord) => {
+    try {
+      // Fetch the full record with items from the API
+      const { data } = await api.get(`/zakat/${record.id}`);
+      setEditRecord(data.data);
+      setPrefillData(null);
+      setFormModalOpen(true);
+    } catch {
+      toast.error("Failed to load record for editing");
+    }
   };
 
   const handleDelete = async (id: string) => {
