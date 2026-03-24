@@ -118,9 +118,30 @@ export async function POST(request: NextRequest) {
     const rates = buildRatesInput(settings);
 
     const hasItems = data.items && data.items.length > 0;
-    const result = hasItems
-      ? calculateZakatFromItems(data.items!, rates)
-      : calculateZakat(buildCalcInput(data, settings));
+
+    let result: { totalAssets: number; netAssets: number; zakatDue: number; nisabValue: number };
+    let flatFields: { cash: number; bank: number; goldGrams: number; silverGrams: number; businessAssets: number; otherAssets: number; srAmount: number; usdAmount: number; cadAmount: number; liabilities: number };
+
+    if (hasItems) {
+      const itemsResult = calculateZakatFromItems(data.items!, rates);
+      result = itemsResult;
+      flatFields = {
+        cash: itemsResult.cash, bank: itemsResult.bank,
+        goldGrams: itemsResult.goldGrams, silverGrams: itemsResult.silverGrams,
+        businessAssets: itemsResult.businessAssets, otherAssets: itemsResult.otherAssets,
+        srAmount: itemsResult.srAmount, usdAmount: itemsResult.usdAmount,
+        cadAmount: itemsResult.cadAmount, liabilities: itemsResult.liabilities,
+      };
+    } else {
+      result = calculateZakat(buildCalcInput(data, settings));
+      flatFields = {
+        cash: data.cash ?? 0, bank: data.bank ?? 0,
+        goldGrams: data.goldGrams ?? 0, silverGrams: data.silverGrams ?? 0,
+        businessAssets: data.businessAssets ?? 0, otherAssets: data.otherAssets ?? 0,
+        srAmount: data.srAmount ?? 0, usdAmount: data.usdAmount ?? 0,
+        cadAmount: data.cadAmount ?? 0, liabilities: data.liabilities ?? 0,
+      };
+    }
 
     const record = await prisma.zakatRecord.create({
       data: {
@@ -128,11 +149,7 @@ export async function POST(request: NextRequest) {
         yearHijri: data.yearHijri,
         yearGregorian: data.yearGregorian,
         zakatDate: data.zakatDate ? new Date(data.zakatDate) : null,
-        cash: data.cash ?? 0, bank: data.bank ?? 0, goldGrams: data.goldGrams ?? 0,
-        silverGrams: data.silverGrams ?? 0, businessAssets: data.businessAssets ?? 0,
-        otherAssets: data.otherAssets ?? 0, srAmount: data.srAmount ?? 0,
-        usdAmount: data.usdAmount ?? 0, cadAmount: data.cadAmount ?? 0,
-        liabilities: data.liabilities ?? 0,
+        ...flatFields,
         totalAssets: result.totalAssets, netAssets: result.netAssets, zakatDue: result.zakatDue,
         nisabValue: result.nisabValue, nisabType: settings.nisabType,
         srRate: settings.srRate, usdRate: settings.usdRate, cadRate: settings.cadRate,

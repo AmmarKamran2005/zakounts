@@ -25,6 +25,19 @@ export interface CalcResult {
   isAboveNisab: boolean;
 }
 
+export interface ItemsCalcResult extends CalcResult {
+  cash: number;
+  bank: number;
+  goldGrams: number;
+  silverGrams: number;
+  businessAssets: number;
+  otherAssets: number;
+  srAmount: number;
+  usdAmount: number;
+  cadAmount: number;
+  liabilities: number;
+}
+
 export interface ZakatItemInput {
   category: 'BANK' | 'INVESTMENT' | 'GOLD_SILVER' | 'PROPERTY' | 'CASH' | 'CURRENCY' | 'LIABILITY';
   name: string;
@@ -96,7 +109,7 @@ function convertToPKR(amount: number, currency: string | undefined, rates: Rates
   }
 }
 
-export function calculateZakatFromItems(items: ZakatItemInput[], rates: RatesInput): CalcResult {
+export function calculateZakatFromItems(items: ZakatItemInput[], rates: RatesInput): ItemsCalcResult {
   let cash = 0;
   let bank = 0;
   let goldGrams = 0;
@@ -159,9 +172,15 @@ export function calculateZakatFromItems(items: ZakatItemInput[], rates: RatesInp
     }
   }
 
-  return calculateZakat({
+  const calcResult = calculateZakat({
     cash, bank, goldGrams, silverGrams, businessAssets, otherAssets,
     srAmount, usdAmount, cadAmount, liabilities,
     ...rates,
   });
+
+  return {
+    ...calcResult,
+    cash, bank, goldGrams, silverGrams, businessAssets, otherAssets,
+    srAmount, usdAmount, cadAmount, liabilities,
+  };
 }

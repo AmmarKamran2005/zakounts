@@ -96,14 +96,22 @@ export async function PUT(request: NextRequest, { params }: Params) {
 
     const hasItems = data.items && data.items.length > 0;
 
-    let result;
+    let result: { totalAssets: number; netAssets: number; zakatDue: number; nisabValue: number };
+    let flatFields: { cash: number; bank: number; goldGrams: number; silverGrams: number; businessAssets: number; otherAssets: number; srAmount: number; usdAmount: number; cadAmount: number; liabilities: number };
+
     if (hasItems) {
       await prisma.zakatItem.deleteMany({ where: { zakatRecordId: id } });
-      result = calculateZakatFromItems(data.items!, rates);
+      const itemsResult = calculateZakatFromItems(data.items!, rates);
+      result = itemsResult;
+      flatFields = {
+        cash: itemsResult.cash, bank: itemsResult.bank,
+        goldGrams: itemsResult.goldGrams, silverGrams: itemsResult.silverGrams,
+        businessAssets: itemsResult.businessAssets, otherAssets: itemsResult.otherAssets,
+        srAmount: itemsResult.srAmount, usdAmount: itemsResult.usdAmount,
+        cadAmount: itemsResult.cadAmount, liabilities: itemsResult.liabilities,
+      };
     } else {
-      const merged = {
-        yearHijri: data.yearHijri ?? existing.yearHijri,
-        yearGregorian: data.yearGregorian ?? existing.yearGregorian,
+      flatFields = {
         cash: data.cash ?? existing.cash, bank: data.bank ?? existing.bank,
         goldGrams: data.goldGrams ?? existing.goldGrams, silverGrams: data.silverGrams ?? existing.silverGrams,
         businessAssets: data.businessAssets ?? existing.businessAssets,
@@ -112,7 +120,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         cadAmount: data.cadAmount ?? existing.cadAmount, liabilities: data.liabilities ?? existing.liabilities,
       };
       result = calculateZakat({
-        ...merged, srRate: settings.srRate, usdRate: settings.usdRate, cadRate: settings.cadRate,
+        ...flatFields, srRate: settings.srRate, usdRate: settings.usdRate, cadRate: settings.cadRate,
         goldPrice: settings.goldPrice, silverPrice: settings.silverPrice, nisabType: settings.nisabType as 'gold' | 'silver',
       });
     }
@@ -123,12 +131,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         yearHijri: data.yearHijri ?? existing.yearHijri,
         yearGregorian: data.yearGregorian ?? existing.yearGregorian,
         zakatDate: data.zakatDate ? new Date(data.zakatDate) : existing.zakatDate,
-        cash: data.cash ?? existing.cash, bank: data.bank ?? existing.bank,
-        goldGrams: data.goldGrams ?? existing.goldGrams, silverGrams: data.silverGrams ?? existing.silverGrams,
-        businessAssets: data.businessAssets ?? existing.businessAssets,
-        otherAssets: data.otherAssets ?? existing.otherAssets,
-        srAmount: data.srAmount ?? existing.srAmount, usdAmount: data.usdAmount ?? existing.usdAmount,
-        cadAmount: data.cadAmount ?? existing.cadAmount, liabilities: data.liabilities ?? existing.liabilities,
+        ...flatFields,
         totalAssets: result.totalAssets, netAssets: result.netAssets, zakatDue: result.zakatDue,
         nisabValue: result.nisabValue, nisabType: settings.nisabType,
         srRate: settings.srRate, usdRate: settings.usdRate, cadRate: settings.cadRate,
