@@ -27,7 +27,7 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('ZAKAT MANAGER', M, 13);
+  doc.text('ZAKOUNTS', M, 13);
 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
@@ -46,11 +46,6 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
   y = 38;
 
   // ─── SUMMARY BOX ────────────────────────────────────
-  doc.setFillColor(...LIGHT_BG);
-  doc.roundedRect(M, y, CW, 30, 2, 2, 'F');
-  doc.setDrawColor(200, 200, 200);
-  doc.roundedRect(M, y, CW, 30, 2, 2, 'S');
-
   const isAbove = record.netAssets >= record.nisabValue;
   const zakatPaid = record.zakatPaid || 0;
   const finalPayable = Math.max(0, record.zakatDue - zakatPaid);
@@ -60,12 +55,29 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
     ['Net Assets', PKR(record.netAssets)],
     ['Nisab Threshold', PKR(record.nisabValue)],
     ['Status', isAbove ? 'Above Nisab ✓' : 'Below Nisab'],
-    ['ZAKAT DUE (2.5%)', zakatPaid > 0 ? `${PKR(record.zakatDue)} (Paid: ${PKR(zakatPaid)}) = ${PKR(finalPayable)}` : PKR(record.zakatDue)],
+    ['ZAKAT DUE (2.5%)', PKR(record.zakatDue)],
   ];
+
+  // If zakatPaid, add extra row
+  const hasZakatPaid = zakatPaid > 0;
+  if (hasZakatPaid) {
+    summaryItems.push(
+      ['Zakat Paid', PKR(zakatPaid)],
+      ['', ''],
+      ['FINAL PAYABLE', PKR(finalPayable)],
+    );
+  }
+
+  const boxHeight = hasZakatPaid ? 44 : 30;
+  doc.setFillColor(...LIGHT_BG);
+  doc.roundedRect(M, y, CW, boxHeight, 2, 2, 'F');
+  doc.setDrawColor(200, 200, 200);
+  doc.roundedRect(M, y, CW, boxHeight, 2, 2, 'S');
 
   const colW = CW / 3;
   doc.setFontSize(7.5);
   for (let i = 0; i < summaryItems.length; i++) {
+    if (!summaryItems[i][0] && !summaryItems[i][1]) continue;
     const col = i % 3;
     const row = Math.floor(i / 3);
     const sx = M + 4 + col * colW;
@@ -75,7 +87,7 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
     doc.setFont('helvetica', 'normal');
     doc.text(summaryItems[i][0], sx, sy);
 
-    if (i === 5) {
+    if (i === 5 || (hasZakatPaid && i === 8)) {
       doc.setTextColor(...BRAND);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(10);
@@ -88,7 +100,7 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
     doc.setFontSize(7.5);
   }
 
-  y += 35;
+  y += boxHeight + 5;
 
   // ─── DETAILED BREAKDOWN HEADING ─────────────────────
   doc.setFontSize(10);
@@ -132,7 +144,7 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
   doc.setTextColor(...GRAY);
   doc.setFont('helvetica', 'italic');
   doc.text('This is an estimated zakat calculation for personal records. Please consult a scholar for precise rulings.', M, footerY);
-  doc.text(`Generated on ${new Date().toLocaleString('en-GB')} by Zakat Manager`, W - M, footerY, { align: 'right' });
+  doc.text(`Generated on ${new Date().toLocaleString('en-GB')} by Zakounts.com`, W - M, footerY, { align: 'right' });
 
   // ─── SAVE ───────────────────────────────────────────
   const fileName = `Zakat_Report_${record.yearHijri}_${record.yearGregorian}.pdf`;
