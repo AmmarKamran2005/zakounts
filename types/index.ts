@@ -6,7 +6,7 @@ export interface User {
   createdAt: string;
 }
 
-export type ZakatItemCategory = 'BANK' | 'INVESTMENT' | 'GOLD_SILVER' | 'PROPERTY' | 'CASH' | 'CURRENCY' | 'LIABILITY';
+export type ZakatItemCategory = 'BANK' | 'INVESTMENT' | 'GOLD_SILVER' | 'PROPERTY' | 'CASH' | 'CURRENCY' | 'LIABILITY' | 'LOAN_GIVEN';
 
 export interface ZakatItem {
   id?: string;
@@ -40,6 +40,7 @@ export interface ZakatRecord {
   totalAssets: number;
   netAssets: number;
   zakatDue: number;
+  zakatPaid: number;
   nisabValue: number;
   nisabType: string;
   srRate: number;

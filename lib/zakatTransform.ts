@@ -78,10 +78,23 @@ export function formDataToApiPayload(formData: ZakatFormData, settings: Settings
     });
   }
 
+  // Loans given
+  for (const item of formData.loansGiven || []) {
+    items.push({
+      category: 'LOAN_GIVEN' as any,
+      name: item.personName,
+      type: item.description || undefined,
+      currency: item.currency as 'PKR' | 'USD' | 'SR' | 'CAD',
+      amount: item.amount || 0,
+      zakatApplicable: item.includeInZakat,
+    });
+  }
+
   return {
     yearHijri: formData.yearHijri,
     yearGregorian: formData.yearGregorian,
     zakatDate: formData.zakatDate || undefined,
+    zakatPaid: formData.zakatPaid || 0,
     items,
   };
 }
@@ -142,10 +155,21 @@ export function apiRecordToFormData(record: ZakatRecord): ZakatFormData {
     .filter(i => i.category === 'LIABILITY')
     .map(i => ({ description: i.name || 'Liability', amount: i.amount || 0 }));
 
+  const loansGiven = items
+    .filter(i => i.category === 'LOAN_GIVEN')
+    .map(i => ({
+      personName: i.name || '',
+      description: i.type || '',
+      currency: (i.currency as 'PKR' | 'USD' | 'SR' | 'CAD') || 'PKR',
+      amount: i.amount || 0,
+      includeInZakat: i.zakatApplicable ?? true,
+    }));
+
   return {
     yearHijri: record.yearHijri,
     yearGregorian: record.yearGregorian,
     zakatDate: record.zakatDate ? new Date(record.zakatDate).toISOString().split('T')[0] : undefined,
+    zakatPaid: record.zakatPaid || 0,
     cashHoldings,
     bankAccounts,
     investments,
@@ -153,5 +177,6 @@ export function apiRecordToFormData(record: ZakatRecord): ZakatFormData {
     properties,
     foreignCurrencies,
     liabilities,
+    loansGiven,
   };
 }

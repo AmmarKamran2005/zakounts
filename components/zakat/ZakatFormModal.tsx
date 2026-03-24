@@ -31,6 +31,7 @@ import { GoldSilverSection } from "./sections/GoldSilverSection";
 import { PropertiesSection } from "./sections/PropertiesSection";
 import { ForeignCurrenciesSection } from "./sections/ForeignCurrenciesSection";
 import { LiabilitiesSection } from "./sections/LiabilitiesSection";
+import { LoanGivenSection } from "./sections/LoanGivenSection";
 import { CategorySummary } from "./CategorySummary";
 
 interface ZakatFormModalProps {
@@ -53,6 +54,7 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
           yearHijri: record?.yearHijri || getCurrentHijriYear(),
           yearGregorian: record?.yearGregorian || getCurrentGregorianYear(),
           zakatDate: undefined,
+          zakatPaid: 0,
           cashHoldings: [],
           bankAccounts: [],
           investments: [],
@@ -60,6 +62,7 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
           properties: [],
           foreignCurrencies: [],
           liabilities: [],
+          loansGiven: [],
         };
 
   const form = useForm<ZakatFormData>({
@@ -94,6 +97,8 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
             ...(record.cadAmount > 0 ? [{ currency: "CAD" as const, amount: record.cadAmount }] : []),
           ],
           liabilities: record.liabilities > 0 ? [{ description: "Liabilities", amount: record.liabilities }] : [],
+          loansGiven: [],
+          zakatPaid: record.zakatPaid || 0,
         });
       }
     }
@@ -195,6 +200,7 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
                 <GoldSilverSection control={form.control} settings={settings} />
                 <PropertiesSection control={form.control} settings={settings} />
                 <ForeignCurrenciesSection control={form.control} settings={settings} />
+                <LoanGivenSection control={form.control} settings={settings} />
 
                 <Separator className="my-4" />
 
@@ -203,13 +209,33 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
               </div>
             )}
 
-            {/* Calculation Summary */}
+            {/* Zakat Paid + Calculation Summary */}
             {calcResult && (
               <>
                 <Separator className="my-4" />
+
+                {/* Zakat Paid Input */}
+                <div className="rounded-xl border bg-muted/30 p-5">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="text-sm font-semibold text-foreground">Zakat Paid Till Date (Optional)</span>
+                  </div>
+                  <div className="max-w-xs">
+                    <Input
+                      type="number"
+                      placeholder="0"
+                      {...form.register("zakatPaid", { valueAsNumber: true })}
+                      className="h-10"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Enter amount already paid — will be subtracted from calculated zakat
+                    </p>
+                  </div>
+                </div>
+
                 <CategorySummary
                   categoryTotals={calcResult.categoryTotals}
                   calcResult={calcResult}
+                  zakatPaid={watchedValues.zakatPaid || 0}
                 />
               </>
             )}

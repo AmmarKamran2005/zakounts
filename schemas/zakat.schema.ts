@@ -45,11 +45,20 @@ export const liabilityItemSchema = z.object({
   amount: z.number().min(0, 'Must be 0 or greater'),
 });
 
+export const loanGivenItemSchema = z.object({
+  personName: z.string().min(1, 'Person name required'),
+  description: z.string().optional(),
+  currency: z.enum(['PKR', 'USD', 'SR', 'CAD']),
+  amount: z.number().min(0, 'Must be 0 or greater'),
+  includeInZakat: z.boolean(),
+});
+
 // Main form schema
 export const zakatFormSchema = z.object({
   yearHijri: z.string().min(1, 'Hijri year is required'),
   yearGregorian: z.number().int().min(2000).max(2100),
   zakatDate: z.string().optional(),
+  zakatPaid: z.number().min(0).optional(),
   bankAccounts: z.array(bankItemSchema),
   investments: z.array(investmentItemSchema),
   goldSilverItems: z.array(goldSilverItemSchema),
@@ -57,6 +66,7 @@ export const zakatFormSchema = z.object({
   cashHoldings: z.array(cashItemSchema),
   foreignCurrencies: z.array(currencyItemSchema),
   liabilities: z.array(liabilityItemSchema),
+  loansGiven: z.array(loanGivenItemSchema),
 });
 
 export type ZakatFormData = z.infer<typeof zakatFormSchema>;
@@ -67,3 +77,4 @@ export type PropertyItem = z.infer<typeof propertyItemSchema>;
 export type CashItem = z.infer<typeof cashItemSchema>;
 export type CurrencyItem = z.infer<typeof currencyItemSchema>;
 export type LiabilityItem = z.infer<typeof liabilityItemSchema>;
+export type LoanGivenItem = z.infer<typeof loanGivenItemSchema>;

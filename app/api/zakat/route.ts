@@ -6,7 +6,7 @@ import { authenticateRequest, unauthorized, badRequest, success, serverError } f
 import { calculateZakat, calculateZakatFromItems, type CalcInput, type RatesInput } from '@/lib/server/zakatCalculator';
 
 const zakatItemSchema = z.object({
-  category: z.enum(['BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CASH', 'CURRENCY', 'LIABILITY']),
+  category: z.enum(['BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CASH', 'CURRENCY', 'LIABILITY', 'LOAN_GIVEN']),
   name: z.string().default(''),
   type: z.string().optional(),
   currency: z.enum(['PKR', 'USD', 'SR', 'CAD']).optional(),
@@ -31,6 +31,7 @@ const createZakatSchema = z.object({
   cadAmount: z.number().min(0).default(0),
   liabilities: z.number().min(0).default(0),
   zakatDate: z.string().optional(),
+  zakatPaid: z.number().min(0).default(0),
   items: z.array(zakatItemSchema).optional(),
 });
 
@@ -149,6 +150,7 @@ export async function POST(request: NextRequest) {
         yearHijri: data.yearHijri,
         yearGregorian: data.yearGregorian,
         zakatDate: data.zakatDate ? new Date(data.zakatDate) : null,
+        zakatPaid: data.zakatPaid ?? 0,
         ...flatFields,
         totalAssets: result.totalAssets, netAssets: result.netAssets, zakatDue: result.zakatDue,
         nisabValue: result.nisabValue, nisabType: settings.nisabType,

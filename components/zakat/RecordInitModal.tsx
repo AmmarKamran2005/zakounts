@@ -63,6 +63,8 @@ function buildPrefillFromRecord(source: ZakatRecord): ZakatFormData {
         ...(source.cadAmount > 0 ? [{ currency: "CAD" as const, amount: source.cadAmount }] : []),
       ],
       liabilities: source.liabilities > 0 ? [{ description: "Liabilities", amount: source.liabilities }] : [],
+      loansGiven: [],
+      zakatPaid: 0,
     };
   }
 

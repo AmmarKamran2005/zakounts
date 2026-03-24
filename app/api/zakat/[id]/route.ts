@@ -6,7 +6,7 @@ import { authenticateRequest, unauthorized, badRequest, notFound, success, serve
 import { calculateZakat, calculateZakatFromItems, type CalcInput, type RatesInput } from '@/lib/server/zakatCalculator';
 
 const zakatItemSchema = z.object({
-  category: z.enum(['BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CASH', 'CURRENCY', 'LIABILITY']),
+  category: z.enum(['BANK', 'INVESTMENT', 'GOLD_SILVER', 'PROPERTY', 'CASH', 'CURRENCY', 'LIABILITY', 'LOAN_GIVEN']),
   name: z.string().default(''),
   type: z.string().optional(),
   currency: z.enum(['PKR', 'USD', 'SR', 'CAD']).optional(),
@@ -31,6 +31,7 @@ const updateZakatSchema = z.object({
   cadAmount: z.number().min(0).optional(),
   liabilities: z.number().min(0).optional(),
   zakatDate: z.string().optional(),
+  zakatPaid: z.number().min(0).optional(),
   items: z.array(zakatItemSchema).optional(),
 });
 
@@ -131,6 +132,7 @@ export async function PUT(request: NextRequest, { params }: Params) {
         yearHijri: data.yearHijri ?? existing.yearHijri,
         yearGregorian: data.yearGregorian ?? existing.yearGregorian,
         zakatDate: data.zakatDate ? new Date(data.zakatDate) : existing.zakatDate,
+        zakatPaid: data.zakatPaid ?? existing.zakatPaid,
         ...flatFields,
         totalAssets: result.totalAssets, netAssets: result.netAssets, zakatDue: result.zakatDue,
         nisabValue: result.nisabValue, nisabType: settings.nisabType,

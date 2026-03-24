@@ -14,14 +14,20 @@ import {
   Coins,
   MinusCircle,
   Calculator,
+  HandCoins,
+  AlertTriangle,
 } from "lucide-react";
 
 interface CategorySummaryProps {
   categoryTotals: CategoryTotals;
   calcResult: CalcResult;
+  zakatPaid?: number;
 }
 
-export function CategorySummary({ categoryTotals, calcResult }: CategorySummaryProps) {
+export function CategorySummary({ categoryTotals, calcResult, zakatPaid = 0 }: CategorySummaryProps) {
+  const finalPayable = Math.max(0, calcResult.zakatDue - zakatPaid);
+  const overpaid = zakatPaid > calcResult.zakatDue && zakatPaid > 0;
+
   const categories = [
     { label: "Cash Holdings", value: categoryTotals.cashTotal, icon: Banknote, color: "text-green-600" },
     { label: "Bank Accounts", value: categoryTotals.bankTotal, icon: Building2, color: "text-blue-600" },
@@ -29,6 +35,7 @@ export function CategorySummary({ categoryTotals, calcResult }: CategorySummaryP
     { label: "Gold & Silver", value: categoryTotals.goldSilverTotal, icon: Gem, color: "text-yellow-600" },
     { label: "Properties", value: categoryTotals.propertyTotal, icon: Home, color: "text-orange-600" },
     { label: "Foreign Currencies", value: categoryTotals.currencyTotal, icon: Coins, color: "text-cyan-600" },
+    ...(categoryTotals.loanGivenTotal > 0 ? [{ label: "Loans Given", value: categoryTotals.loanGivenTotal, icon: HandCoins, color: "text-teal-600" }] : []),
   ];
 
   return (
@@ -89,9 +96,28 @@ export function CategorySummary({ categoryTotals, calcResult }: CategorySummaryP
           <Separator />
 
           <div className="flex justify-between items-center p-3 rounded-lg bg-primary/10">
-            <span className="font-semibold text-base">Zakat Due (2.5%)</span>
-            <span className="font-bold text-xl text-primary">{formatPKR(calcResult.zakatDue)}</span>
+            <span className="font-semibold text-sm">Calculated Zakat (2.5%)</span>
+            <span className="font-bold text-lg text-primary">{formatPKR(calcResult.zakatDue)}</span>
           </div>
+
+          {zakatPaid > 0 && (
+            <>
+              <div className="flex justify-between items-center px-3">
+                <span className="text-sm text-muted-foreground">Zakat Paid Till Date</span>
+                <span className="font-semibold text-sm text-orange-600">- {formatPKR(zakatPaid)}</span>
+              </div>
+              {overpaid && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                  <AlertTriangle className="h-4 w-4 text-amber-600 shrink-0" />
+                  <span className="text-xs text-amber-700 dark:text-amber-400">Paid amount exceeds calculated zakat. No further zakat is due.</span>
+                </div>
+              )}
+              <div className="flex justify-between items-center p-3 rounded-lg bg-emerald-100 dark:bg-emerald-950/40 border-2 border-emerald-500/30">
+                <span className="font-bold text-base">Final Payable Zakat</span>
+                <span className="font-bold text-xl text-emerald-700 dark:text-emerald-400">{formatPKR(finalPayable)}</span>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

@@ -51,6 +51,7 @@ model ZakatRecord {
   cadRate        Float       @default(0)
   goldPrice      Float       @default(0)
   silverPrice    Float       @default(0)
+  zakatPaid      Float       @default(0)
   zakatDate      DateTime?
   createdAt      DateTime    @default(now())
   updatedAt      DateTime    @updatedAt
@@ -106,4 +107,5 @@ enum ZakatItemCategory {
   CASH
   CURRENCY
   LIABILITY
+  LOAN_GIVEN
 }

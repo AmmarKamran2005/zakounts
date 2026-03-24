@@ -35,6 +35,7 @@ export interface CategoryTotals {
   goldSilverTotal: number;
   propertyTotal: number;
   currencyTotal: number;
+  loanGivenTotal: number;
   liabilityTotal: number;
   grandTotal: number;
 }
@@ -131,10 +132,16 @@ export function calculateZakatFromFormData(formData: ZakatFormData, settings: Se
     return sum + convertToPKR(amt, item.currency, rates);
   }, 0);
 
+  // Loans given (only those included in zakat)
+  const loanGivenTotal = (formData.loansGiven || []).reduce((sum, item) => {
+    if (!item.includeInZakat) return sum;
+    return sum + convertToPKR(item.amount || 0, item.currency || 'PKR', rates);
+  }, 0);
+
   // Liabilities
   const liabilityTotal = (formData.liabilities || []).reduce((sum, item) => sum + (item.amount || 0), 0);
 
-  const grandTotal = cashTotal + bankTotal + investmentTotal + goldSilverTotal + propertyTotal + currencyTotal;
+  const grandTotal = cashTotal + bankTotal + investmentTotal + goldSilverTotal + propertyTotal + currencyTotal + loanGivenTotal;
 
   const calcInput: CalcInput = {
     cash: cashTotal,
@@ -177,6 +184,7 @@ export function calculateZakatFromFormData(formData: ZakatFormData, settings: Se
       goldSilverTotal: Math.round(goldSilverTotal * 100) / 100,
       propertyTotal: Math.round(propertyTotal * 100) / 100,
       currencyTotal: Math.round(currencyTotal * 100) / 100,
+      loanGivenTotal: Math.round(loanGivenTotal * 100) / 100,
       liabilityTotal: Math.round(liabilityTotal * 100) / 100,
       grandTotal: Math.round(grandTotal * 100) / 100,
     },

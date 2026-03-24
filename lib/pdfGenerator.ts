@@ -52,13 +52,15 @@ export function generateZakatPDF(record: ZakatRecord, userName: string) {
   doc.roundedRect(M, y, CW, 30, 2, 2, 'S');
 
   const isAbove = record.netAssets >= record.nisabValue;
+  const zakatPaid = record.zakatPaid || 0;
+  const finalPayable = Math.max(0, record.zakatDue - zakatPaid);
   const summaryItems = [
     ['Total Assets', PKR(record.totalAssets)],
     ['Liabilities', PKR(record.liabilities)],
     ['Net Assets', PKR(record.netAssets)],
     ['Nisab Threshold', PKR(record.nisabValue)],
     ['Status', isAbove ? 'Above Nisab ✓' : 'Below Nisab'],
-    ['ZAKAT DUE (2.5%)', PKR(record.zakatDue)],
+    ['ZAKAT DUE (2.5%)', zakatPaid > 0 ? `${PKR(record.zakatDue)} (Paid: ${PKR(zakatPaid)}) = ${PKR(finalPayable)}` : PKR(record.zakatDue)],
   ];
 
   const colW = CW / 3;
@@ -223,6 +225,11 @@ function renderItemsTables(doc: jsPDF, grouped: Record<string, ZakatItem[]>, rec
         const rate = i.currency === 'SR' ? record.srRate : i.currency === 'USD' ? record.usdRate : i.currency === 'CAD' ? record.cadRate : 1;
         return [i.currency || '-', i.amount.toLocaleString(), rate.toString(), PKR(i.amount * rate)];
       }),
+    },
+    {
+      key: 'LOAN_GIVEN', title: 'Loans Given',
+      heads: [['Person', 'Currency', 'Amount', 'Included in Zakat']],
+      bodyFn: items => items.map(i => [i.name, i.currency || 'PKR', i.amount.toLocaleString(), i.zakatApplicable === false ? 'No' : 'Yes']),
     },
     {
       key: 'LIABILITY', title: 'Liabilities',

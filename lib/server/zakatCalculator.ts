@@ -39,7 +39,7 @@ export interface ItemsCalcResult extends CalcResult {
 }
 
 export interface ZakatItemInput {
-  category: 'BANK' | 'INVESTMENT' | 'GOLD_SILVER' | 'PROPERTY' | 'CASH' | 'CURRENCY' | 'LIABILITY';
+  category: 'BANK' | 'INVESTMENT' | 'GOLD_SILVER' | 'PROPERTY' | 'CASH' | 'CURRENCY' | 'LIABILITY' | 'LOAN_GIVEN';
   name: string;
   type?: string;
   currency?: string;
@@ -168,6 +168,12 @@ export function calculateZakatFromItems(items: ZakatItemInput[], rates: RatesInp
 
       case 'LIABILITY':
         liabilities += item.amount;
+        break;
+
+      case 'LOAN_GIVEN':
+        if (item.zakatApplicable !== false) {
+          cash += convertToPKR(item.amount, item.currency, rates);
+        }
         break;
     }
   }
