@@ -1,0 +1,109 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id               String        @id @default(cuid())
+  name             String
+  email            String        @unique
+  password         String
+  role             Role          @default(USER)
+  isVerified       Boolean       @default(false)
+  otpHash          String?
+  otpExpiry        DateTime?
+  otpCooldown      DateTime?
+  resetTokenHash   String?
+  resetTokenExpiry DateTime?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  settings         Settings?
+  zakatRecords     ZakatRecord[]
+}
+
+model ZakatRecord {
+  id             String      @id @default(cuid())
+  userId         String
+  yearHijri      String
+  yearGregorian  Int
+  cash           Float       @default(0)
+  bank           Float       @default(0)
+  goldGrams      Float       @default(0)
+  silverGrams    Float       @default(0)
+  businessAssets Float       @default(0)
+  otherAssets    Float       @default(0)
+  srAmount       Float       @default(0)
+  usdAmount      Float       @default(0)
+  cadAmount      Float       @default(0)
+  liabilities    Float       @default(0)
+  totalAssets    Float       @default(0)
+  netAssets      Float       @default(0)
+  zakatDue       Float       @default(0)
+  nisabValue     Float       @default(0)
+  nisabType      String      @default("gold")
+  srRate         Float       @default(0)
+  usdRate        Float       @default(0)
+  cadRate        Float       @default(0)
+  goldPrice      Float       @default(0)
+  silverPrice    Float       @default(0)
+  zakatDate      DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  items          ZakatItem[]
+  user           User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([yearGregorian])
+}
+
+model Settings {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  srRate      Float    @default(74.0)
+  usdRate     Float    @default(278.0)
+  goldPrice   Float    @default(21000.0)
+  silverPrice Float    @default(250.0)
+  cadRate     Float    @default(200.0)
+  nisabType   String   @default("gold")
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ZakatItem {
+  id              String            @id @default(cuid())
+  zakatRecordId   String
+  category        ZakatItemCategory
+  name            String            @default("")
+  type            String?
+  currency        String?
+  amount          Float             @default(0)
+  quantity        Float?
+  unitPrice       Float?
+  zakatApplicable Boolean           @default(true)
+  metadata        Json?
+  createdAt       DateTime          @default(now())
+  zakatRecord     ZakatRecord       @relation(fields: [zakatRecordId], references: [id], onDelete: Cascade)
+
+  @@index([zakatRecordId])
+  @@index([category])
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum ZakatItemCategory {
+  BANK
+  INVESTMENT
+  GOLD_SILVER
+  PROPERTY
+  CASH
+  CURRENCY
+  LIABILITY
+}
