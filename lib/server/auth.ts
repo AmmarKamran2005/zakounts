@@ -12,9 +12,14 @@ export function authenticateRequest(request: NextRequest): TokenPayload | null {
   }
 
   const token = authHeader.split(' ')[1];
+  if (!token) return null;
+
   try {
     return verifyAccessToken(token);
-  } catch {
+  } catch (err) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('[Auth] JWT verification failed:', err instanceof Error ? err.message : err);
+    }
     return null;
   }
 }

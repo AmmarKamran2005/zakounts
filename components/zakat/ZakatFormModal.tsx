@@ -144,7 +144,16 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
         </DialogHeader>
 
         <FormProvider {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 mt-2">
+          <form onSubmit={form.handleSubmit(handleSubmit, (errors) => {
+            const firstError = Object.entries(errors)[0];
+            if (firstError) {
+              const [field, err] = firstError;
+              const msg = Array.isArray(err)
+                ? err.find(e => e)?.message || err.find(e => e)?.[Object.keys(e).find(k => e[k]?.message) || '']?.message
+                : (err as any)?.message;
+              toast.error(`Validation error in "${field}": ${msg || 'Please check your input'}`);
+            }
+          })} className="space-y-6 mt-2">
             {/* Period Section */}
             <div className="rounded-xl border bg-muted/30 p-5">
               <div className="flex items-center gap-2 mb-4">

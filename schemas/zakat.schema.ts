@@ -24,7 +24,7 @@ export const goldSilverItemSchema = z.object({
 });
 
 export const propertyItemSchema = z.object({
-  name: z.string().min(1, 'Property name required'),
+  name: z.string(),
   type: z.enum(['Plot', 'House', 'Commercial']),
   zakatApplicable: z.boolean(),
   value: z.number().min(0, 'Must be 0 or greater'),

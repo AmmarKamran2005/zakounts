@@ -10,7 +10,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'zakat-manager-jwt-secret-key-2024-
 const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'zakat-manager-refresh-secret-key-2024-prod';
 
 export function generateAccessToken(payload: TokenPayload): string {
-  return jwt.sign(payload, JWT_SECRET, { expiresIn: '15m' });
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '1h' });
 }
 
 export function generateRefreshToken(payload: TokenPayload): string {
