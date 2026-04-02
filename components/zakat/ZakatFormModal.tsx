@@ -148,9 +148,9 @@ export function ZakatFormModal({ open, onOpenChange, record, prefillData, onSubm
             const firstError = Object.entries(errors)[0];
             if (firstError) {
               const [field, err] = firstError;
-              const msg = Array.isArray(err)
-                ? err.find(e => e)?.message || err.find(e => e)?.[Object.keys(e).find(k => e[k]?.message) || '']?.message
-                : (err as any)?.message;
+              const nested = Array.isArray(err) ? err.find(item => item) : err;
+              const msg = (nested as any)?.message
+                || (nested && typeof nested === 'object' ? Object.values(nested).find((v: any) => v?.message) as any : undefined)?.message;
               toast.error(`Validation error in "${field}": ${msg || 'Please check your input'}`);
             }
           })} className="space-y-6 mt-2">
